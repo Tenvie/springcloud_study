@@ -1,5 +1,6 @@
 package com.example.activiti.controller;
 
+import com.example.activiti.utils.ActiviUtils;
 import org.activiti.engine.FormService;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.IdentityService;
@@ -20,8 +21,12 @@ import org.activiti.engine.task.Task;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -59,7 +64,14 @@ public class WorkFlow {
     //启动一个流程
     @GetMapping(value = "/runtime/start")
     public String start(String processDefinitionId) {
-        return runtimeService.startProcessInstanceById(processDefinitionId).getId();
+        List<String> assigneeList = new ArrayList<String>();
+        assigneeList.add("tom");
+        assigneeList.add("jeck");
+        assigneeList.add("mary");
+        assigneeList.add("jane");
+        Map<String, Object> vars = new HashMap<String, Object>();
+        vars.put("assigneeList", assigneeList);
+        return runtimeService.startProcessInstanceById(processDefinitionId,vars).getId();
     }
 
     //查询流程实例下一步的任务
@@ -68,16 +80,37 @@ public class WorkFlow {
        List<HistoricActivityInstance> task= historyService.createHistoricActivityInstanceQuery().processInstanceId(processId).unfinished().list();
        Map<String,String> result = new HashMap<>();
        task.forEach(historicActivityInstance ->result.put(historicActivityInstance.getTaskId(),historicActivityInstance.getActivityName()));
+        // 取得当前任务
+        List<HistoricTaskInstance> currTask = historyService.createHistoricTaskInstanceQuery().processInstanceId(processId).list();
+        // 取得流程定义
+        ProcessDefinitionEntity definition = (ProcessDefinitionEntity) (repositoryService.getProcessDefinition(currTask.get(0).getProcessDefinitionId()));
+        // 取得当前活动
+        ActivityImpl currActivity =  definition.findActivity(currTask.get(0).getTaskDefinitionKey());
+        currActivity.getProperty("process_test");
+        //taskService.complete("52533");
+        //taskService.complete("52539");
        return result;
     }
 
     //完成一个任务
     @GetMapping(value = "/runtime/finish")
     public void finish(String taskId,String variable){
-       taskService.complete(taskId,Collections.singletonMap("type",variable));
+        List<String> assigneeList = new ArrayList<String>();
+        assigneeList.add("tom");
+        assigneeList.add("jeck");
+        assigneeList.add("mary");
+        assigneeList.add("jane");
+        Map<String, Object> vars = new HashMap<String, Object>();
+        vars.put("user", assigneeList);
+       taskService.complete(taskId,Collections.singletonMap("type",vars));
     }
 
-    //完成任务，带流程变量
+    @GetMapping(value = "/task/filter")
+    public void finish(String filter){
+       // taskService.createTaskQuery().
+
+    }
+
 
     //设置一个任务节点为会签
     @GetMapping(value = "/task/setMultiInstance")
@@ -94,6 +127,40 @@ public class WorkFlow {
             String modelId =repositoryService.createModelQuery().deploymentId(processDefinition.getDeploymentId()).singleResult().getId();
             activiUtils.setMultiInstance(modelId,nodelId);
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 读取资源，通过部署ID
+     *
+     * @param processDefinitionId
+     *            流程定义
+     * @param resourceType
+     *            资源类型(xml|image)
+     * @throws Exception
+     */
+    @RequestMapping(value = "/resource/read")
+    public void loadByDeployment(@RequestParam("processDefinitionId") String processDefinitionId,
+                                 @RequestParam("resourceType") String resourceType, HttpServletResponse response){
+        ProcessDefinition processDefinition = repositoryService.createProcessDefinitionQuery()
+                .processDefinitionId(processDefinitionId).singleResult();
+
+        String resourceName = "";
+        if (resourceType.equals("image")) {
+            resourceName = processDefinition.getDiagramResourceName();
+        } else if (resourceType.equals("xml")) {
+            resourceName = processDefinition.getResourceName();
+        }
+        InputStream resourceAsStream = repositoryService.getResourceAsStream(processDefinition.getDeploymentId(),
+                resourceName);
+        byte[] b = new byte[1024];
+        int len = -1;
+        try {
+            while ((len = resourceAsStream.read(b, 0, 1024)) != -1) {
+                response.getOutputStream().write(b, 0, len);
+            }
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -169,7 +236,7 @@ public class WorkFlow {
         assigneeList.add("mary");
         Map<String, Object> vars = new HashMap<String, Object>();
         vars.put("assigneeList", assigneeList);
-        identityService.setAuthenticatedUserId("createUserId");
+        //identityService.setAuthenticatedUserId("createUserId");
         ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("myProcess", "Key001", vars);
 
         System.out.println("流程实例ID = " + processInstance.getId());
@@ -178,6 +245,8 @@ public class WorkFlow {
 
         // 查询指定人的任务
         // ============ 会签任务开始 ===========
+       /* Map map = new HashMap();
+        map.put("audit","yes");*/
         List<Task> taskList1 = taskService.createTaskQuery().taskAssignee("mary").orderByTaskCreateTime().desc().list();
         System.out.println("taskList1 = " + taskList1);
         Task task1 = taskList1.get(0);
