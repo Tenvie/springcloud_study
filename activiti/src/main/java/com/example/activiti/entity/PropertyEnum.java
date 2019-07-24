@@ -11,9 +11,12 @@ import java.util.List;
  * @date
  */
 public enum PropertyEnum {
+    process(0),
     multiTask(0),
     masterMen(1),
-    generalMen(1);
+    generalMen(1),
+    timeLimit(1),
+    accumulativeLimit(1);
 
     private int type;
 

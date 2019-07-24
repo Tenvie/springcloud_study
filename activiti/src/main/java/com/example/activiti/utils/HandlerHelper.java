@@ -3,6 +3,7 @@ package com.example.activiti.utils;
 import com.example.activiti.handler.HandlerContext;
 import org.activiti.bpmn.model.UserTask;
 import org.activiti.engine.delegate.event.ActivitiEvent;
+import org.activiti.engine.impl.bpmn.parser.BpmnParse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -30,9 +31,9 @@ public class HandlerHelper {
         handlerHelper.handlerContext = this.handlerContext;
     }
 
-    public static void handle(String type, UserTask userTask, String text) {
+    public static void handle(String type, UserTask userTask, String text,BpmnParse bpmnParse) {
         // 调用方法
-        handlerHelper.handlerContext.getInstance(type).handler(userTask, text);
+        handlerHelper.handlerContext.getInstance(type).handler(userTask, text,bpmnParse);
     }
 
     public static void handle(String type, ActivitiEvent event) {

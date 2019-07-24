@@ -1444,6 +1444,46 @@
 
     } ]
 
+  }, {
+
+    "name" : "formId",
+
+    "properties" : [ {
+
+      "id" : "formId",
+
+      "type" : "String",
+
+      "title" : "关联表单",
+
+      "value" : "",
+
+      "description" : "关联表单",
+
+      "popular" : true
+
+    } ]
+
+  }, {
+
+    "name" : "managers",
+
+    "properties" : [ {
+
+      "id" : "managers",
+
+      "type" : "String",
+
+      "title" : "流程管理者",
+
+      "value" : "",
+
+      "description" : "流程管理者",
+
+      "popular" : true
+
+    } ]
+
   } ],
 
   "stencils" : [ {
@@ -1466,7 +1506,7 @@
 
     "hide" : true,
 
-    "propertyPackages" : [ "process_idpackage", "namepackage", "documentationpackage", "process_authorpackage", "process_versionpackage", "process_namespacepackage", "executionlistenerspackage", "eventlistenerspackage", "signaldefinitionspackage", "messagedefinitionspackage" ],
+    "propertyPackages" : [ "process_idpackage", "formId", "documentationpackage", "managers", "process_versionpackage"],
 
     "hiddenPropertyPackages" : [ ],
 

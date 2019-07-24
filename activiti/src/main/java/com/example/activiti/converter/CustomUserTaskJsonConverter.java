@@ -8,6 +8,7 @@ import org.activiti.bpmn.model.CustomProperty;
 import org.activiti.bpmn.model.FlowElement;
 import org.activiti.bpmn.model.UserTask;
 import org.activiti.editor.language.json.converter.UserTaskJsonConverter;
+import org.activiti.engine.impl.json.JsonProcessDefinitionConverter;
 
 import java.util.Map;
 
@@ -30,6 +31,11 @@ public class CustomUserTaskJsonConverter extends UserTaskJsonConverter {
             customProperty.setSimpleValue(this.getPropertyValueAsString(property.toLowerCase(), elementNode));
             userTask.getCustomProperties().add(customProperty);
         }
+        //设置流程实例属性
+        CustomProperty processProperty = new CustomProperty();
+        processProperty.setName("process");
+        processProperty.setSimpleValue(modelNode.get("properties").toString());
+        userTask.getCustomProperties().add(processProperty);
         return userTask;
     }
 

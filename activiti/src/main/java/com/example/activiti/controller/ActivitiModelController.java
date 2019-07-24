@@ -101,23 +101,4 @@ public class ActivitiModelController {
         repositoryService.saveModel(modelData);
         return "SUCCESS";
     }
-
-    // 启动流程
-    @RequestMapping("/start")
-    @ResponseBody
-    public Object startProcess(String keyName) {
-        ProcessInstance process = runtimeService.startProcessInstanceByKey(keyName);
-        return process.getId() + " : " + process.getProcessDefinitionId();
-    }
-
-    /**
-     * 提交任务
-     */
-    @RequestMapping("/run")
-    @ResponseBody
-    public Object run(String processInstanceId) {
-        Task task = taskService.createTaskQuery().processInstanceId(processInstanceId).singleResult();
-        taskService.complete(task.getId());
-        return "SUCCESS";
-    }
 }

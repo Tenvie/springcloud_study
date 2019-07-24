@@ -8,6 +8,7 @@ import org.activiti.bpmn.model.UserTask;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.TaskService;
 import org.activiti.engine.delegate.event.ActivitiEvent;
+import org.activiti.engine.impl.bpmn.parser.BpmnParse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -29,7 +30,7 @@ public class MultiTaskHandler extends AbstractHandler {
     TaskService taskService;
 
     @Override
-    public void handler(UserTask userTask, String text) {
+    public void handler(UserTask userTask, String text,BpmnParse bpmnParse) {
         if ("true".equals(text)) {
                 // 获取多实例配置
                 MultiInstanceLoopCharacteristics characteristics = new MultiInstanceLoopCharacteristics();

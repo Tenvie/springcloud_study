@@ -1,76 +1,34 @@
 package com.example.activiti.entity;
 
-import org.activiti.engine.impl.persistence.entity.TaskEntity;
-
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
+import lombok.Data;
 
 /**
  * @Class CustomTaskEntity
  * @description: TODO
  * @Author thz
- * @Date 2019/7/22 15:54
+ * @Date 2019/7/24 10:44
  * @Version 1.0
  */
+@Data
 public class CustomTaskEntity {
 
     private String id;
 
+    //实例名称
     private String name;
 
+    //主要处理人
     private String masterMen;
 
+    //一般处理人
     private String generalMen;
 
-    private boolean multiTask;
+    //是否是会签任务
+    private String multiTask;
 
-    public String getId() {
-        return id;
-    }
+    //办理时限
+    private double timeLimit;
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getMasterMen() {
-        return masterMen;
-    }
-
-    public void setMasterMen(String masterMen) {
-        this.masterMen = masterMen;
-    }
-
-    public String getGeneralMen() {
-        return generalMen;
-    }
-
-    public void setGeneralMen(String generalMen) {
-        this.generalMen = generalMen;
-    }
-
-    public boolean isMultiTask() {
-        return multiTask;
-    }
-
-    public void setMultiTask(boolean multiTask) {
-        this.multiTask = multiTask;
-    }
-
-    public List getAllField() {
-        List<String> fieldList = new ArrayList<>();
-        Field[] field = this.getClass().getFields();
-        for (Field f : field) {
-            fieldList.add(f.getName());
-        }
-        return fieldList;
-    }
+    //累计办理时限
+    private double accumulativeLimit;
 }

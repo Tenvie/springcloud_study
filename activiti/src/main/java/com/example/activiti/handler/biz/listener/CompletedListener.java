@@ -6,6 +6,7 @@ import org.activiti.bpmn.model.UserTask;
 import org.activiti.engine.*;
 import org.activiti.engine.delegate.event.ActivitiEvent;
 import org.activiti.engine.history.HistoricTaskInstance;
+import org.activiti.engine.impl.bpmn.parser.BpmnParse;
 import org.activiti.engine.impl.persistence.entity.ProcessDefinitionEntity;
 import org.activiti.engine.impl.pvm.PvmTransition;
 import org.activiti.engine.impl.pvm.process.ActivityImpl;
@@ -33,7 +34,7 @@ public class CompletedListener extends AbstractHandler {
 
     //解析器处理
     @Override
-    public void handler(UserTask userTask, String text) {
+    public void handler(UserTask userTask, String text,BpmnParse bpmnParse) {
 
     }
 

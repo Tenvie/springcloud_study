@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public enum ListenerTypeEnum {
+    ACTIVITY_STARTED,
     ACTIVITY_COMPLETED,
     ENTITY_SUSPENDED;
 

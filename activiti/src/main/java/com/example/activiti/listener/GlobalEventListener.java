@@ -4,6 +4,7 @@ import com.example.activiti.entity.ListenerTypeEnum;
 import com.example.activiti.utils.HandlerHelper;
 import org.activiti.engine.delegate.event.ActivitiEvent;
 import org.activiti.engine.delegate.event.ActivitiEventListener;
+import org.activiti.engine.delegate.event.ActivitiEventType;
 import org.springframework.stereotype.Component;
 
 /**
@@ -17,9 +18,9 @@ import org.springframework.stereotype.Component;
 public class GlobalEventListener implements ActivitiEventListener {
     @Override
     public void onEvent(ActivitiEvent event) {
-        /*ActivitiEventType eventType = event.getType();
+        ActivitiEventType eventType = event.getType();
 
-        if(ActivitiEventType.ACTIVITY_STARTED.equals(eventType)){
+        /*if(ActivitiEventType.ACTIVITY_STARTED.equals(eventType)){
             System.out.println("流程启动");
         }
 
@@ -31,6 +32,9 @@ public class GlobalEventListener implements ActivitiEventListener {
         }*/
         if (ListenerTypeEnum.list().contains(event.getType().toString())) {
             HandlerHelper.handle(event.getType().toString(), event);
+        }
+        if(ActivitiEventType.ENTITY_ACTIVATED.equals(eventType)){
+            //流程实例被激活时，启动定时任务
         }
     }
 
