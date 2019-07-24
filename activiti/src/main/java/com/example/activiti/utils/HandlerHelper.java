@@ -1,8 +1,8 @@
 package com.example.activiti.utils;
 
 import com.example.activiti.handler.HandlerContext;
-import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.UserTask;
+import org.activiti.engine.delegate.event.ActivitiEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +20,7 @@ public class HandlerHelper {
 
     @Autowired
     private HandlerContext handlerContext;
+
     private static HandlerHelper handlerHelper;
 
     //初始化
@@ -32,5 +33,10 @@ public class HandlerHelper {
     public static void handle(String type, UserTask userTask, String text) {
         // 调用方法
         handlerHelper.handlerContext.getInstance(type).handler(userTask, text);
+    }
+
+    public static void handle(String type, ActivitiEvent event) {
+        // 调用方法
+        handlerHelper.handlerContext.getInstance(type).handler(event);
     }
 }

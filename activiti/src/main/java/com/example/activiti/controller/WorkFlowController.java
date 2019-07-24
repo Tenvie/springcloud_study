@@ -1,14 +1,12 @@
 package com.example.activiti.controller;
 
-import com.example.activiti.utils.ActiviUtils;
-import org.activiti.engine.FormService;
-import org.activiti.engine.HistoryService;
-import org.activiti.engine.IdentityService;
-import org.activiti.engine.RepositoryService;
-import org.activiti.engine.RuntimeService;
-import org.activiti.engine.TaskService;
-import org.activiti.engine.history.HistoricActivityInstance;
+import com.example.activiti.service.WorkflowTraceService;
+import com.example.activiti.entity.CustomTaskEntity;
+import org.activiti.bpmn.model.BpmnModel;
+import org.activiti.engine.*;
 import org.activiti.engine.history.HistoricTaskInstance;
+import org.activiti.engine.impl.cfg.ProcessEngineConfigurationImpl;
+import org.activiti.engine.impl.context.Context;
 import org.activiti.engine.impl.persistence.entity.ProcessDefinitionEntity;
 import org.activiti.engine.impl.pvm.PvmActivity;
 import org.activiti.engine.impl.pvm.PvmTransition;
@@ -18,11 +16,10 @@ import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
+import org.activiti.image.ProcessDiagramGenerator;
+import org.activiti.spring.ProcessEngineFactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -31,8 +28,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/workflow")
-public class WorkFlow {
+public class WorkFlowController {
 
     @Autowired
     RepositoryService repositoryService;
@@ -53,96 +49,71 @@ public class WorkFlow {
     @Autowired
     HistoryService historyService;
 
+    @Autowired
+    WorkflowTraceService traceService;
+
+    @Autowired
+    ProcessEngineFactoryBean processEngine;
+
+    @Autowired
+    ProcessEngineConfiguration processEngineConfiguration;
+
 
     //获取所有流程定义
-    @GetMapping(value = "/repository/processDefinitions")
+    @GetMapping(value = "/processDefinitions")
     public Map<String, String> findProcessDefinitions() {
         List<ProcessDefinition> processDefinitions = repositoryService.createProcessDefinitionQuery().list();
         return processDefinitions.stream().collect(Collectors.toMap(ProcessDefinition::getId, ProcessDefinition::getName));
     }
 
-    //启动一个流程
-    @GetMapping(value = "/runtime/start")
-    public String start(String processDefinitionId) {
-        List<String> assigneeList = new ArrayList<String>();
-        assigneeList.add("tom");
-        assigneeList.add("jeck");
-        assigneeList.add("mary");
-        assigneeList.add("jane");
-        Map<String, Object> vars = new HashMap<String, Object>();
-        vars.put("assigneeList", assigneeList);
-        return runtimeService.startProcessInstanceById(processDefinitionId,vars).getId();
+    /**
+     * 输出跟踪流程信息
+     *
+     * @param processInstanceId
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping(value = "/processtrace")
+    @ResponseBody
+    public List<Map<String, Object>> traceProcess(@RequestParam("pid") String processInstanceId) throws Exception {
+        List<Map<String, Object>> activityInfos = traceService.traceProcess(processInstanceId);
+        return activityInfos;
     }
 
-    //查询流程实例下一步的任务
-    @GetMapping(value = "/runtime/getNextTasks")
-    public Map getNextTasks(String processId) {
-       List<HistoricActivityInstance> task= historyService.createHistoricActivityInstanceQuery().processInstanceId(processId).unfinished().list();
-       Map<String,String> result = new HashMap<>();
-       task.forEach(historicActivityInstance ->result.put(historicActivityInstance.getTaskId(),historicActivityInstance.getActivityName()));
-        // 取得当前任务
-        List<HistoricTaskInstance> currTask = historyService.createHistoricTaskInstanceQuery().processInstanceId(processId).list();
-        // 取得流程定义
-        ProcessDefinitionEntity definition = (ProcessDefinitionEntity) (repositoryService.getProcessDefinition(currTask.get(0).getProcessDefinitionId()));
-        // 取得当前活动
-        ActivityImpl currActivity =  definition.findActivity(currTask.get(0).getTaskDefinitionKey());
-        currActivity.getProperty("process_test");
-        //taskService.complete("52533");
-        //taskService.complete("52539");
-       return result;
-    }
+    /**
+     * 读取带跟踪的图片
+     */
+    @RequestMapping(value = "/processtrace/auto/{pId}")
+    public void readResource(@PathVariable("pId") String processInstanceId, HttpServletResponse response)
+            throws Exception {
+        ProcessInstance processInstance = runtimeService.createProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
+        BpmnModel bpmnModel = repositoryService.getBpmnModel(processInstance.getProcessDefinitionId());
+        List<String> activeActivityIds = runtimeService.getActiveActivityIds(processInstanceId);
+        // 使用spring注入引擎请使用下面的这行代码
+        processEngineConfiguration = processEngine.getProcessEngineConfiguration();
+        Context.setProcessEngineConfiguration((ProcessEngineConfigurationImpl) processEngineConfiguration);
 
-    //完成一个任务
-    @GetMapping(value = "/runtime/finish")
-    public void finish(String taskId,String variable){
-        List<String> assigneeList = new ArrayList<String>();
-        assigneeList.add("tom");
-        assigneeList.add("jeck");
-        assigneeList.add("mary");
-        assigneeList.add("jane");
-        Map<String, Object> vars = new HashMap<String, Object>();
-        vars.put("user", assigneeList);
-       taskService.complete(taskId,Collections.singletonMap("type",vars));
-    }
+        ProcessDiagramGenerator diagramGenerator = processEngineConfiguration.getProcessDiagramGenerator();
+        InputStream imageStream = diagramGenerator.generateDiagram(bpmnModel, "png", activeActivityIds);
 
-    @GetMapping(value = "/task/filter")
-    public void finish(String filter){
-       // taskService.createTaskQuery().
-
-    }
-
-
-    //设置一个任务节点为会签
-    @GetMapping(value = "/task/setMultiInstance")
-    public void setMultiInstance(String taskId,String nodelId){
-        ActiviUtils activiUtils = new ActiviUtils();
-        try {
-            Task task=taskService.createTaskQuery() // 创建任务查询
-                    .taskId(taskId) // 根据任务id查询
-                    .singleResult();
-            String processDefinitionId=task.getProcessDefinitionId(); // 获取流程定义id
-            ProcessDefinition processDefinition=repositoryService.createProcessDefinitionQuery() // 创建流程定义查询
-                    .processDefinitionId(processDefinitionId) // 根据流程定义id查询
-                    .singleResult();
-            String modelId =repositoryService.createModelQuery().deploymentId(processDefinition.getDeploymentId()).singleResult().getId();
-            activiUtils.setMultiInstance(modelId,nodelId);
-        } catch (Exception e) {
-            e.printStackTrace();
+        // 输出资源内容到相应对象
+        byte[] b = new byte[1024];
+        int len;
+        while ((len = imageStream.read(b, 0, 1024)) != -1) {
+            response.getOutputStream().write(b, 0, len);
         }
     }
 
     /**
      * 读取资源，通过部署ID
      *
-     * @param processDefinitionId
-     *            流程定义
-     * @param resourceType
-     *            资源类型(xml|image)
+     * @param processDefinitionId 流程定义
+     * @param resourceType        资源类型(xml|image)
      * @throws Exception
      */
     @RequestMapping(value = "/resource/read")
     public void loadByDeployment(@RequestParam("processDefinitionId") String processDefinitionId,
-                                 @RequestParam("resourceType") String resourceType, HttpServletResponse response){
+                                 @RequestParam("resourceType") String resourceType, HttpServletResponse response) {
         ProcessDefinition processDefinition = repositoryService.createProcessDefinitionQuery()
                 .processDefinitionId(processDefinitionId).singleResult();
 
@@ -165,9 +136,62 @@ public class WorkFlow {
         }
     }
 
+    //启动一个流程
+    @GetMapping(value = "/start")
+    public String start(String processDefinitionId) {
+        return runtimeService.startProcessInstanceById(processDefinitionId).getId();
+    }
+
+    //查询流程实例下一步的任务
+    @GetMapping(value = "/getNextTasks")
+    @ResponseBody
+    public List<CustomTaskEntity> getNextTasks(String processId) {
+        List<CustomTaskEntity> result = new ArrayList<>();
+        // 取得当前任务
+        List<HistoricTaskInstance> currTask = historyService.createHistoricTaskInstanceQuery().processInstanceId(processId).list();
+        // 取得流程定义
+        ProcessDefinitionEntity definition = (ProcessDefinitionEntity) (repositoryService.getProcessDefinition(currTask.get(0).getProcessDefinitionId()));
+        // 取得当前活动
+        ActivityImpl currActivity = definition.findActivity(currTask.get(0).getTaskDefinitionKey());
+        List<PvmTransition> pvmTransitions = currActivity.getOutgoingTransitions();
+        for (PvmTransition pvmTransition : pvmTransitions) {
+            ActivityImpl nextTask = (ActivityImpl) pvmTransition.getDestination();//获取所有的终点节点
+            CustomTaskEntity taskEntity = new CustomTaskEntity();
+            taskEntity.setMasterMen(nextTask.getProperty("masterMen").toString());
+            taskEntity.setId(nextTask.getId());
+            taskEntity.setName(nextTask.getProperty("name").toString());
+            result.add(taskEntity);
+        }
+        return result;
+    }
+
+    //完成一个任务
+    @GetMapping(value = "/finish")
+    public void finish(String taskId) {
+        taskService.complete(taskId);
+    }
+
+    //转办或者接办任务
+    @GetMapping(value = "/setAssigneeTask")
+    public void trunTask(String taskId, String assignee) {
+        taskService.setAssignee(taskId, assignee);
+    }
+
+    //挂起流程实例
+    @GetMapping(value = "/suspendProcessInstance")
+    public void suspendProcessInstance(String processInstanceId) {
+        runtimeService.suspendProcessInstanceById(processInstanceId);
+    }
+
+    //解除挂起（激活）流程实例
+    @GetMapping(value = "/activateProcessInstanceById")
+    public void activateProcessInstance(String processInstanceId) {
+        runtimeService.activateProcessInstanceById(processInstanceId);
+    }
+
     //回退任务
     @GetMapping(value = "/runtime/backProcess")
-    public void backProcess(String taskId){
+    public void backProcess(String taskId) {
         try {
             // 取得当前任务
             HistoricTaskInstance currTask = historyService.createHistoricTaskInstanceQuery().taskId(taskId).singleResult();
@@ -176,10 +200,10 @@ public class WorkFlow {
             // 取得流程定义
             ProcessDefinitionEntity definition = (ProcessDefinitionEntity) (repositoryService.getProcessDefinition(currTask.getProcessDefinitionId()));
             if (definition == null) {
-                return ;
+                return;
             }
             // 取得当前活动
-            ActivityImpl currActivity =  definition.findActivity(currTask.getTaskDefinitionKey());
+            ActivityImpl currActivity = definition.findActivity(currTask.getTaskDefinitionKey());
             //获取上一步活动
             List<PvmTransition> lastTransitionList = currActivity.getIncomingTransitions();
             // 清除当前活动的出口
@@ -219,7 +243,7 @@ public class WorkFlow {
 
     @GetMapping(value = "/activiti/multiTask")
     public void multiTask() {
-         // 流程部署
+        // 流程部署
         Deployment deployment = repositoryService.createDeployment().addClasspathResource("process/MultiTask.bpmn")
                 .name("流程测试")
                 .category("")
@@ -266,4 +290,4 @@ public class WorkFlow {
     }
 
 
-    }
+}

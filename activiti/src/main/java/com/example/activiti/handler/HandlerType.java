@@ -12,6 +12,6 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-public @interface ExtenProperty {
+public @interface HandlerType {
     String value();
 }

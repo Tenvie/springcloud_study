@@ -2,6 +2,7 @@ package com.example.activiti.handler;
 
 import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.UserTask;
+import org.activiti.engine.delegate.event.ActivitiEvent;
 
 /**
  * @Class AbstractHandler
@@ -13,4 +14,6 @@ import org.activiti.bpmn.model.UserTask;
 public abstract class AbstractHandler {
 
     abstract public void handler(UserTask userTask, String text);
+
+    abstract public void handler(ActivitiEvent event);
 }

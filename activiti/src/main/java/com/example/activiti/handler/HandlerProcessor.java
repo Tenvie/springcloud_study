@@ -19,18 +19,18 @@ import java.util.Map;
 @Component
 public class HandlerProcessor implements BeanFactoryPostProcessor {
 
-    private static final String HANDLER_PACKAGE = "com.example.activiti.handler.biz";
+    private static final String HANDLER_PACKAGE = "com.example.activiti.handler.biz.*";
 
     /**
-     * 扫描@ExtenProperty，初始化HandlerContext，将其注册到spring容器
+     * 扫描@HandlerType，初始化HandlerContext，将其注册到spring容器
      *
      * @param beanFactory bean工厂
      */
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
         Map<String, Class> handlerMap = new HashMap<>();
-        ClassScaner.scan(HANDLER_PACKAGE, ExtenProperty.class).forEach(clazz -> {
-            String type = clazz.getAnnotation(ExtenProperty.class).value();
+        ClassScaner.scan(HANDLER_PACKAGE, HandlerType.class).forEach(clazz -> {
+            String type = clazz.getAnnotation(HandlerType.class).value();
             handlerMap.put(type, clazz);
         });
         HandlerContext context = new HandlerContext(handlerMap);

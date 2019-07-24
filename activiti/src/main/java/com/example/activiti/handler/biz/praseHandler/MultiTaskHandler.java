@@ -1,23 +1,15 @@
-package com.example.activiti.handler.biz;
+package com.example.activiti.handler.biz.praseHandler;
 
 
 import com.example.activiti.handler.AbstractHandler;
-import com.example.activiti.handler.ExtenProperty;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.activiti.bpmn.model.BpmnModel;
+import com.example.activiti.handler.HandlerType;
 import org.activiti.bpmn.model.MultiInstanceLoopCharacteristics;
 import org.activiti.bpmn.model.UserTask;
-import org.activiti.editor.language.json.converter.BpmnJsonConverter;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.TaskService;
-import org.activiti.engine.repository.ProcessDefinition;
-import org.activiti.engine.task.Task;
+import org.activiti.engine.delegate.event.ActivitiEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
 
 /**
  * @Class MultiTaskHandler
@@ -27,7 +19,7 @@ import java.io.IOException;
  * @Version 1.0
  */
 @Component("multiTask")
-@ExtenProperty("multiTask")
+@HandlerType("multiTask")
 public class MultiTaskHandler extends AbstractHandler {
 
     @Autowired
@@ -48,5 +40,10 @@ public class MultiTaskHandler extends AbstractHandler {
 
                 userTask.setLoopCharacteristics(characteristics);
         }
+    }
+
+    @Override
+    public void handler(ActivitiEvent event) {
+
     }
 }

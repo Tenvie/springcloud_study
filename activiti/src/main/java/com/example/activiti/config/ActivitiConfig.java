@@ -1,6 +1,6 @@
 package com.example.activiti.config;
 
-import com.example.activiti.listener.ProcessEventListener;
+import com.example.activiti.listener.GlobalEventListener;
 import com.example.activiti.parseHandler.ExtensionUserTaskParseHandler;
 import org.activiti.engine.delegate.event.ActivitiEventListener;
 import org.activiti.engine.parse.BpmnParseHandler;
@@ -26,16 +26,19 @@ public class ActivitiConfig implements ProcessEngineConfigurationConfigurer {
         processEngineConfiguration.setLabelFontName("宋体");
         processEngineConfiguration.setAnnotationFontName("宋体");
 
+        //禁用自带的用户和组
         processEngineConfiguration.setDbIdentityUsed(false);
         processEngineConfiguration.setDatabaseSchemaUpdate("true");
 
+        //添加自定义解析器
         List<BpmnParseHandler> customDefaultBpmnParseHandlers = new ArrayList<>();
         ExtensionUserTaskParseHandler extensionUserTaskParseHandler = new ExtensionUserTaskParseHandler();
         customDefaultBpmnParseHandlers.add(extensionUserTaskParseHandler);
         processEngineConfiguration.setCustomDefaultBpmnParseHandlers(customDefaultBpmnParseHandlers);
 
+        //添加自定义监听器
         List<ActivitiEventListener> customEventListeners =  new ArrayList<>();
-        customEventListeners.add(new ProcessEventListener());
+        customEventListeners.add(new GlobalEventListener());
         processEngineConfiguration.setEventListeners(customEventListeners);
     }
 }

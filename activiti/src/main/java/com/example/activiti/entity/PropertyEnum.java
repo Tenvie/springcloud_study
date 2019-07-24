@@ -35,4 +35,11 @@ public enum PropertyEnum {
         return list;
     }
 
+    public static List<String> all() {
+        List list = new ArrayList();
+        for (PropertyEnum propertyEnum : PropertyEnum.values()) {
+                list.add(propertyEnum.toString());
+        }
+        return list;
+    }
 }

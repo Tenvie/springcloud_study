@@ -1,5 +1,6 @@
 package com.example.activiti.converter;
 
+import com.example.activiti.entity.PropertyEnum;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.activiti.bpmn.model.BaseElement;
@@ -23,14 +24,12 @@ public class CustomUserTaskJsonConverter extends UserTaskJsonConverter {
         FlowElement flowElement = super.convertJsonToElement(elementNode, modelNode, shapeMap);
         UserTask userTask = (UserTask) flowElement;
         //将自己的属性添加到activiti自带的自定义属性中
-        CustomProperty customProperty = new CustomProperty();
-        customProperty.setName("process_test");
-        customProperty.setSimpleValue(this.getPropertyValueAsString("process_test", elementNode));
-        userTask.getCustomProperties().add(customProperty);
-        CustomProperty customProperty2 = new CustomProperty();
-        customProperty2.setName("multiTask");
-        customProperty2.setSimpleValue(this.getPropertyValueAsString("multitask", elementNode));
-        userTask.getCustomProperties().add(customProperty2);
+        for(String property : PropertyEnum.all()) {
+            CustomProperty customProperty = new CustomProperty();
+            customProperty.setName(property);
+            customProperty.setSimpleValue(this.getPropertyValueAsString(property.toLowerCase(), elementNode));
+            userTask.getCustomProperties().add(customProperty);
+        }
         return userTask;
     }
 
