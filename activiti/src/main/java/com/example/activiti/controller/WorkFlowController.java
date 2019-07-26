@@ -2,6 +2,7 @@ package com.example.activiti.controller;
 
 import com.example.activiti.dao.CustomInstanceDao;
 import com.example.activiti.entity.CustomInstanceEntity;
+import com.example.activiti.service.CustomRunTimeService;
 import com.example.activiti.service.ProcessDefinitionService;
 import com.example.activiti.service.WorkflowTraceService;
 import com.example.activiti.entity.CustomTaskEntity;
@@ -68,6 +69,9 @@ public class WorkFlowController {
 
     @Autowired
     ProcessDefinitionService processDefinitionService;
+
+    @Autowired
+    CustomRunTimeService customRunTimeService;
 
 
     //获取所有流程定义
@@ -177,23 +181,7 @@ public class WorkFlowController {
     @GetMapping(value = "/getNextTasks")
     @ResponseBody
     public List<CustomTaskEntity> getNextTasks(String processId) {
-        List<CustomTaskEntity> result = new ArrayList<>();
-        // 取得当前任务
-        List<HistoricTaskInstance> currTask = historyService.createHistoricTaskInstanceQuery().processInstanceId(processId).list();
-        // 取得流程定义
-        ProcessDefinitionEntity definition = (ProcessDefinitionEntity) (repositoryService.getProcessDefinition(currTask.get(0).getProcessDefinitionId()));
-        // 取得当前活动
-        ActivityImpl currActivity = definition.findActivity(currTask.get(0).getTaskDefinitionKey());
-        List<PvmTransition> pvmTransitions = currActivity.getOutgoingTransitions();
-        for (PvmTransition pvmTransition : pvmTransitions) {
-            ActivityImpl nextTask = (ActivityImpl) pvmTransition.getDestination();//获取所有的终点节点
-            CustomTaskEntity taskEntity = new CustomTaskEntity();
-            taskEntity.setMasterMen(nextTask.getProperty("masterMen").toString());
-            taskEntity.setId(nextTask.getId());
-            taskEntity.setName(nextTask.getProperty("name").toString());
-            result.add(taskEntity);
-        }
-        return result;
+        return processDefinitionService.getNextTasks(processId);
     }
 
     //完成一个任务
@@ -276,9 +264,24 @@ public class WorkFlowController {
 
     //获取个人待办任务
     @GetMapping(value = "/getTodoTask")
-    public  List<Task> getTodoTask(String assignee) {
-       List<Task> tasks = taskService.createTaskQuery().taskAssignee(assignee).list();
-       return tasks;
+    public List<Task> getTodoTask(String assignee) {
+        List<Task> tasks = taskService.createTaskQuery().taskAssignee(assignee).list();
+        return tasks;
+    }
+
+    //跳转至任何节点
+    @GetMapping(value = "/jump")
+    public void jump(String processId, String targetTaskKey) {
+        customRunTimeService.reachActivity(processId, targetTaskKey, "jump");
+    }
+
+    //回退任务的命令实现方法
+    @GetMapping(value = "/back")
+    public void back(String processId) {
+        // 获取上一步任务
+        CustomTaskEntity lastTask = processDefinitionService.getLastTask(processId);
+        //跳转至后一个节点
+        customRunTimeService.reachActivity(processId, lastTask.getId(), "back");
     }
 
 

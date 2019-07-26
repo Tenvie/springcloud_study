@@ -2,18 +2,11 @@ package com.example.activiti.parseHandler;
 
 import com.example.activiti.entity.PropertyEnum;
 import com.example.activiti.utils.HandlerHelper;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.activiti.bpmn.model.ExtensionElement;
 import org.activiti.bpmn.model.UserTask;
 import org.activiti.engine.impl.bpmn.parser.BpmnParse;
 import org.activiti.engine.impl.bpmn.parser.handler.UserTaskParseHandler;
 import org.activiti.engine.impl.pvm.process.ActivityImpl;
-import org.activiti.engine.impl.pvm.process.ProcessDefinitionImpl;
-import org.activiti.engine.impl.pvm.process.ScopeImpl;
-import org.activiti.engine.parse.BpmnParseHandler;
-
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
